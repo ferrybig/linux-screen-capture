@@ -14,6 +14,7 @@ import java.util.Objects;
  * @author fernando
  */
 public class WindowInfo {
+
 	private final String name;
 	private final Rectangle dimension;
 
@@ -67,6 +68,5 @@ public class WindowInfo {
 	public boolean contains(Point p) {
 		return dimension.contains(p);
 	}
-
 
 }

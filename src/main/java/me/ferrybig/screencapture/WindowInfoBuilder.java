@@ -7,7 +7,6 @@ package me.ferrybig.screencapture;
 
 import java.awt.Rectangle;
 
-
 public class WindowInfoBuilder {
 
 	private String name;

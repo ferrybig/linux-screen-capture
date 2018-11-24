@@ -3,13 +3,14 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package me.ferrybig.screencapture;
+package me.ferrybig.screencapture.ui;
 
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
 import javax.swing.JPanel;
+import me.ferrybig.screencapture.ScreenCaptureModel;
 
 /**
  *
@@ -32,6 +33,5 @@ public class PicturePanel extends JPanel {
 		super.paintComponent(g);
 		g.drawImage(this.model.getBackground(), -offset.x, -offset.y, this);
 	}
-
 
 }

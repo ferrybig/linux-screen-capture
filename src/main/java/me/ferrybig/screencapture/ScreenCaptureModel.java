@@ -5,6 +5,7 @@
  */
 package me.ferrybig.screencapture;
 
+import me.ferrybig.screencapture.events.EventBus;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
@@ -15,21 +16,70 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.imageio.ImageIO;
+import me.ferrybig.screencapture.events.MouseEvent;
+import me.ferrybig.screencapture.events.MouseEventBus;
+import me.ferrybig.screencapture.events.MouseListener;
+import me.ferrybig.screencapture.tools.Tool;
+import me.ferrybig.screencapture.tools.ToolInfo;
 
 /**
  *
  * @author fernando
  */
 public class ScreenCaptureModel {
+
 	private final List<WindowInfo> infoList;
-	private Rectangle highlighted = null;
+	private final List<ToolInfo> tools;
 	private final BufferedImage background;
+	private Tool selectedTool;
+	private ToolInfo selectedToolInfo;
+	private Rectangle highlighted = null;
 	private Point toolbarLocation = new Point();
-	private Point mouseLocation = new Point();
+	private Mouse mouse = new Mouse(new Point(), false, false);
 	public final EventBus<Rectangle> listenersHighlighted = new EventBus();
-	public final EventBus<Point> listenersMouseLocation = new EventBus();
+	public final EventBus<Mouse> listenersMouse = new EventBus();
+	public final EventBus<ToolInfo> listenersTool = new EventBus();
 	public final EventBus<Point> listenersToolbarLocation = new EventBus();
 	public final EventBus<Void> doneListener = new EventBus();
+	public final MouseEventBus listenersMouseEvent = new MouseEventBus();
+	private static final Logger LOG = Logger.getLogger(ScreenCaptureModel.class.getName());
+
+	public ScreenCaptureModel(List<WindowInfo> infoList, List<ToolInfo> tools, BufferedImage background) {
+		this.infoList = infoList;
+		this.tools = tools;
+		this.background = background;
+		this.listenersMouse.addListener(() -> this.listenersMouseEvent.updateMouse(this.mouse));
+		this.listenersMouseEvent.addListener(new MouseListener() {
+			@Override
+			public void mouseClick(MouseEvent evt) {
+				LOG.info("click: " + evt.toString());
+			}
+
+			@Override
+			public void mouseMove(MouseEvent evt) {
+				LOG.info("move: " + evt.toString());
+			}
+
+			@Override
+			public void mousePress(MouseEvent evt) {
+				LOG.info("press: " + evt.toString());
+			}
+
+			@Override
+			public void mouseRelease(MouseEvent evt) {
+				LOG.info("release: " + evt.toString());
+			}
+		});
+		this.setToolInfo(this.tools.get(0));
+	}
+
+	public List<ToolInfo> getTools() {
+		return tools;
+	}
+
+	public List<WindowInfo> getInfoList() {
+		return infoList;
+	}
 
 	public Rectangle getHighlighted() {
 		return highlighted;
@@ -43,26 +93,18 @@ public class ScreenCaptureModel {
 		return toolbarLocation;
 	}
 
-	public Point getMouseLocation() {
-		return mouseLocation;
+	public Mouse getMouse() {
+		return mouse;
 	}
 
-	public ScreenCaptureModel(List<WindowInfo> infoList, BufferedImage background) {
-		this.infoList = infoList;
-		this.background = background;
-	}
-
-	private void recomputeActive() {
-		Rectangle oldActive = this.highlighted;
-		WindowInfo newActive = null;
-		for (WindowInfo w : infoList) {
-			if (w.contains(this.mouseLocation)) {
-				newActive = w;
-			}
+	public void setToolInfo(ToolInfo info) {
+		if (selectedTool != null) {
+			selectedTool.close();
 		}
-		if (newActive.getDimension() != oldActive) {
-			this.setHighlighted(newActive.getDimension());
-		}
+		ToolInfo old = this.selectedToolInfo;
+		this.selectedToolInfo = info;
+		this.selectedTool = info.getTool().apply(this);
+		this.listenersTool.fireEvent(old, info);
 	}
 
 	public void setHighlighted(Rectangle newValue) {
@@ -71,12 +113,12 @@ public class ScreenCaptureModel {
 		this.listenersHighlighted.fireEvent(old, newValue);
 	}
 
-	public void setMouseLocation(Point newValue) {
-		Point old = this.mouseLocation;
-		this.mouseLocation = newValue;
-		this.listenersMouseLocation.fireEvent(old, newValue);
-		this.recomputeActive();
+	public void setMouse(Mouse newValue) {
+		Mouse old = this.mouse;
+		this.mouse = newValue;
+		this.listenersMouse.fireEvent(old, newValue);
 	}
+
 	public void setToolbarLocation(Point newValue) {
 		Point old = this.toolbarLocation;
 		this.toolbarLocation = newValue;
@@ -103,5 +145,8 @@ public class ScreenCaptureModel {
 			}).start();
 		}
 	}
-}
 
+	public void exit() {
+		doneListener.fireEvent(null, null);
+	}
+}

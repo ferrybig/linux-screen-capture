@@ -5,6 +5,9 @@
  */
 package me.ferrybig.screencapture;
 
+import me.ferrybig.screencapture.ui.MousePanel;
+import me.ferrybig.screencapture.ui.PaintPanel;
+import me.ferrybig.screencapture.ui.PicturePanel;
 import java.awt.AWTException;
 import java.awt.Container;
 import java.awt.Graphics2D;
@@ -32,6 +35,12 @@ import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
+import me.ferrybig.screencapture.tools.AreaSelectTool;
+import me.ferrybig.screencapture.tools.ExitTool;
+import me.ferrybig.screencapture.tools.ToolInfo;
+import me.ferrybig.screencapture.tools.WindowSelectTool;
+import me.ferrybig.screencapture.ui.ContainerPanel;
+import me.ferrybig.screencapture.ui.ToolbarPanel;
 
 /**
  *
@@ -180,7 +189,11 @@ public class Main {
 
 		System.out.println("Done!");
 		windows.forEach(System.out::println);
-		ScreenCaptureModel model = new ScreenCaptureModel(windows, result);
+		List<ToolInfo> tools = new ArrayList<>();
+		tools.add(new ToolInfo(WindowSelectTool::new, Toolkit.getDefaultToolkit().getImage(Main.class.getResource("test.png")), "Windows"));
+		tools.add(new ToolInfo(AreaSelectTool::new, Toolkit.getDefaultToolkit().getImage(Main.class.getResource("test.png")), "Select"));
+		tools.add(new ToolInfo(ExitTool::new, Toolkit.getDefaultToolkit().getImage(Main.class.getResource("test.png")), "Exit"));
+		ScreenCaptureModel model = new ScreenCaptureModel(windows, tools, result);
 		SwingUtilities.invokeLater(() -> {
 			GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
 			GraphicsDevice[] screens = ge.getScreenDevices();
@@ -204,7 +217,9 @@ public class Main {
 		constraints.weightx = 1;
 		constraints.weighty = 1;
 
-		contentFrame.add(new SelectorPanel(model, offset), constraints);
+		contentFrame.add(new MousePanel(model, offset), constraints);
+		contentFrame.add(new ContainerPanel(offset, new ToolbarPanel(model)), constraints);
+		contentFrame.add(new PaintPanel(model, offset), constraints);
 		contentFrame.add(new PicturePanel(model, offset), constraints);
 
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

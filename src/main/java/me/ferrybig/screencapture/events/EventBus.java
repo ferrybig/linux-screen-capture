@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package me.ferrybig.screencapture;
+package me.ferrybig.screencapture.events;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -13,6 +13,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @author fernando
  */
 public class EventBus<T> {
+
 	private final List<Runnable> listeners = new CopyOnWriteArrayList<>();
 
 	public void fireEvent(T oldVal, T newVal) {
